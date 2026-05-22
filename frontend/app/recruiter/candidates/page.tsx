@@ -13,6 +13,7 @@ interface CandidateSession {
   session_id: string;
   candidate_name: string;
   candidate_email: string;
+  role_applied: string;
   completed_at: string;
   score: number | null;
   recommendation: string;
