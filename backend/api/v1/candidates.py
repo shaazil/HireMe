@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 
 from database.session import get_db
-from api.deps import get_current_user
+from api.deps import get_current_user, get_or_create_candidate
 from models.user import User, UserRole
 from models.candidate import Candidate
 from models.interview import InterviewSession
@@ -23,9 +23,7 @@ def get_profile(
 ):
     if current_user.role != UserRole.CANDIDATE:
         raise HTTPException(status_code=403, detail="Not a candidate account")
-    candidate = db.query(Candidate).filter(Candidate.user_id == current_user.id).first()
-    if not candidate:
-        raise HTTPException(status_code=404, detail="Profile not found")
+    candidate = get_or_create_candidate(db, current_user)
     return CandidateProfile(
         id=candidate.id,
         name=candidate.name,
@@ -45,9 +43,7 @@ def update_profile(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    candidate = db.query(Candidate).filter(Candidate.user_id == current_user.id).first()
-    if not candidate:
-        raise HTTPException(status_code=404, detail="Profile not found")
+    candidate = get_or_create_candidate(db, current_user)
 
     for field, value in body.model_dump(exclude_unset=True).items():
         setattr(candidate, field, value)
@@ -77,9 +73,7 @@ async def upload_resume(
     if not file.filename or not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files are accepted")
 
-    candidate = db.query(Candidate).filter(Candidate.user_id == current_user.id).first()
-    if not candidate:
-        raise HTTPException(status_code=404, detail="Profile not found")
+    candidate = get_or_create_candidate(db, current_user)
 
     # Read and extract text from PDF
     try:
@@ -126,9 +120,7 @@ def get_interview_history(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    candidate = db.query(Candidate).filter(Candidate.user_id == current_user.id).first()
-    if not candidate:
-        raise HTTPException(status_code=404, detail="Profile not found")
+    candidate = get_or_create_candidate(db, current_user)
 
     sessions = (
         db.query(InterviewSession)

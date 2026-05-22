@@ -10,7 +10,7 @@ import os
 import shutil
 
 from database.session import get_db
-from api.deps import get_current_user
+from api.deps import get_current_user, get_or_create_candidate
 from models.user import User, UserRole
 from models.candidate import Candidate
 from models.recruiter import Recruiter
@@ -53,9 +53,7 @@ def get_candidate_settings(current_user: User = Depends(get_current_user), db: S
     if current_user.role != UserRole.CANDIDATE:
         raise HTTPException(status_code=403, detail="Not a candidate")
     
-    candidate = db.query(Candidate).filter(Candidate.user_id == current_user.id).first()
-    if not candidate:
-        raise HTTPException(status_code=404, detail="Candidate not found")
+    candidate = get_or_create_candidate(db, current_user)
         
     return {
         "name": candidate.name,
@@ -75,9 +73,7 @@ def update_candidate_settings(
     if current_user.role != UserRole.CANDIDATE:
         raise HTTPException(status_code=403, detail="Not a candidate")
         
-    candidate = db.query(Candidate).filter(Candidate.user_id == current_user.id).first()
-    if not candidate:
-        raise HTTPException(status_code=404, detail="Candidate not found")
+    candidate = get_or_create_candidate(db, current_user)
         
     candidate.name = body.name
     candidate.phone = body.phone
@@ -109,9 +105,7 @@ def upload_candidate_resume(
     if not file.filename.endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files are allowed")
         
-    candidate = db.query(Candidate).filter(Candidate.user_id == current_user.id).first()
-    if not candidate:
-        raise HTTPException(status_code=404, detail="Candidate not found")
+    candidate = get_or_create_candidate(db, current_user)
 
     # Generate a unique filename
     ext = ".pdf"

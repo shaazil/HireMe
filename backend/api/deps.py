@@ -6,7 +6,8 @@ from fastapi import Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 
 from database.session import get_db
-from models.user import User
+from models.user import User, UserRole
+from models.candidate import Candidate
 from utils.security import decode_access_token
 
 async def get_current_user(
@@ -45,3 +46,23 @@ async def get_current_user(
             detail="User not found",
         )
     return user
+
+
+def get_or_create_candidate(db: Session, user: User) -> Candidate:
+    """Return existing candidate profile or auto-create one for users missing it."""
+    candidate = db.query(Candidate).filter(Candidate.user_id == user.id).first()
+    if candidate:
+        return candidate
+
+    if user.role != UserRole.CANDIDATE:
+        raise HTTPException(status_code=403, detail="Only candidates can access this resource")
+
+    candidate = Candidate(
+        user_id=user.id,
+        name=user.email.split("@")[0],
+    )
+    db.add(candidate)
+    db.commit()
+    db.refresh(candidate)
+    return candidate
+

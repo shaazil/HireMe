@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from database.session import get_db
-from api.deps import get_current_user
+from api.deps import get_current_user, get_or_create_candidate
 from models.user import User
 from models.candidate import Candidate
 from models.interview import InterviewSession, InterviewResponse, SessionStatus
@@ -29,9 +29,7 @@ async def start_interview(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    candidate = db.query(Candidate).filter(Candidate.user_id == current_user.id).first()
-    if not candidate:
-        raise HTTPException(status_code=404, detail="Candidate profile not found")
+    candidate = get_or_create_candidate(db, current_user)
 
     result = await interview_service.start_interview(
         db,
@@ -54,8 +52,8 @@ async def submit_response(
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    candidate = db.query(Candidate).filter(Candidate.user_id == current_user.id).first()
-    if not candidate or session.candidate_id != candidate.id:
+    candidate = get_or_create_candidate(db, current_user)
+    if session.candidate_id != candidate.id:
         raise HTTPException(status_code=403, detail="Not your session")
 
     if session.status != SessionStatus.IN_PROGRESS:
