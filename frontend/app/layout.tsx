@@ -14,6 +14,8 @@ export const metadata: Metadata = {
     "Streamline your hiring with AI-powered interviews, adaptive coding challenges, and comprehensive candidate evaluation reports.",
 };
 
+import { AuthProvider } from "@/components/providers/auth-provider";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -22,8 +24,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col font-sans">
-        {children}
-        <Toaster position="top-right" />
+        <AuthProvider>
+          {children}
+          <Toaster position="top-right" />
+        </AuthProvider>
       </body>
     </html>
   );

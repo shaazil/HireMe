@@ -14,7 +14,13 @@ api.interceptors.request.use((config) => {
     // We now primarily use httpOnly cookies, but keep fallback
     const token = localStorage.getItem("hireme_token");
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      if (config.headers && typeof config.headers.set === 'function') {
+        config.headers.set("Authorization", `Bearer ${token}`);
+      } else {
+        // Fallback if headers is a plain object
+        config.headers = config.headers || {};
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
   }
   return config;
