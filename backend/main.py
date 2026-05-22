@@ -74,7 +74,8 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        settings.FRONTEND_URL,
+        "https://try-hireme.vercel.app",
+        settings.FRONTEND_URL.rstrip("/"),
         "http://localhost:3000",
         "http://127.0.0.1:3000",
     ],
