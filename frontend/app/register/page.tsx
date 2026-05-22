@@ -34,8 +34,8 @@ export default function RegisterPage() {
     try {
       const { data } = await api.post("/auth/register", { ...form, role });
       setAuth(
-        { id: data.id, email: form.email, role: data.role, name: data.name },
-        "cookie-token"
+        { id: data.user_id, email: form.email, role: data.role, name: data.name },
+        data.access_token
       );
       toast.success("Account created!");
       router.push(data.role === "recruiter" ? "/recruiter" : "/dashboard");

@@ -15,7 +15,7 @@ from utils.limiter import limiter
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
-@router.post("/register", response_model=UserResponse)
+@router.post("/register", response_model=TokenResponse)
 @limiter.limit("5/minute")
 def register(request: Request, body: RegisterRequest, response: Response, db: Session = Depends(get_db)):
     try:
@@ -33,39 +33,40 @@ def register(request: Request, body: RegisterRequest, response: Response, db: Se
             value=result["access_token"],
             httponly=True,
             samesite="lax",
-            secure=False,  # Set to True in production (HTTPS)
+            secure=False,
             max_age=86400 * 7,
         )
-        return UserResponse(
-            id=result["user_id"],
-            email=body.email,
+        return TokenResponse(
+            access_token=result["access_token"],
+            user_id=result["user_id"],
             role=result["role"],
             name=result["name"],
-            company=result.get("company")
+            company=result.get("company"),
         )
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@router.post("/login", response_model=UserResponse)
+@router.post("/login", response_model=TokenResponse)
 @limiter.limit("10/minute")
 def login(request: Request, body: LoginRequest, response: Response, db: Session = Depends(get_db)):
     try:
         result = login_user(db=db, email=body.email, password=body.password)
+        # Also set cookie for same-origin setups (local dev)
         response.set_cookie(
             key="hireme_token",
             value=result["access_token"],
             httponly=True,
             samesite="lax",
-            secure=False,  # Set to True in production (HTTPS)
+            secure=False,
             max_age=86400 * 7,
         )
-        return UserResponse(
-            id=result["user_id"],
-            email=body.email,
+        return TokenResponse(
+            access_token=result["access_token"],
+            user_id=result["user_id"],
             role=result["role"],
             name=result["name"],
-            company=result.get("company")
+            company=result.get("company"),
         )
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))

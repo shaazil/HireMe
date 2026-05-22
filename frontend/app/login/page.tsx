@@ -23,8 +23,8 @@ export default function LoginPage() {
     try {
       const { data } = await api.post("/auth/login", form);
       setAuth(
-        { id: data.id, email: form.email, role: data.role, name: data.name },
-        "cookie-token"
+        { id: data.user_id, email: form.email, role: data.role, name: data.name },
+        data.access_token
       );
       toast.success("Welcome back!");
       router.push(data.role === "recruiter" ? "/recruiter" : "/dashboard");
