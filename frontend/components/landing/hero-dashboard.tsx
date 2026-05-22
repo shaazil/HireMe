@@ -31,7 +31,7 @@ export function HeroDashboard() {
       <motion.div
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
+        transition={{ duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] }}
         className="relative rounded-xl border border-stone-200/90 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.06)] overflow-hidden"
       >
         <div className="flex items-center gap-2 px-4 py-2.5 border-b border-stone-100 bg-stone-50/80">
