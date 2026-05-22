@@ -12,6 +12,7 @@ interface AuthState {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
+  hasHydrated: boolean;
   setAuth: (user: User, token: string) => void;
   logout: () => void;
   hydrate: () => void;
@@ -21,8 +22,9 @@ export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   token: null,
   isAuthenticated: false,
+  hasHydrated: false,
 
-    setAuth: (user, token) => {
+  setAuth: (user, token) => {
     localStorage.setItem("hireme_token", token);
     localStorage.setItem("hireme_user", JSON.stringify(user));
     set({ user, token, isAuthenticated: true });
@@ -39,16 +41,21 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   hydrate: () => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined") {
+      set({ hasHydrated: true });
+      return;
+    }
     const token = localStorage.getItem("hireme_token");
     const userStr = localStorage.getItem("hireme_user");
     if (token && userStr) {
       try {
         const user = JSON.parse(userStr);
-        set({ user, token, isAuthenticated: true });
+        set({ user, token, isAuthenticated: true, hasHydrated: true });
       } catch {
-        set({ user: null, token: null, isAuthenticated: false });
+        set({ user: null, token: null, isAuthenticated: false, hasHydrated: true });
       }
+    } else {
+      set({ user: null, token: null, isAuthenticated: false, hasHydrated: true });
     }
   },
 }));

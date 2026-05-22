@@ -6,7 +6,7 @@ import { Users, BarChart3, Settings, LogOut, Briefcase, PlusCircle, LayoutList }
 import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/store/auth-store";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const navItems = [
   { href: "/recruiter", label: "Overview", icon: BarChart3 },
@@ -18,29 +18,29 @@ const navItems = [
 export default function RecruiterLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, logout, hydrate } = useAuthStore();
+  const { user, logout, isAuthenticated, hasHydrated } = useAuthStore();
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    hydrate();
-  }, [hydrate]);
+    if (!hasHydrated) return;
 
-  useEffect(() => {
-    const token = localStorage.getItem("hireme_token");
-    if (!token) {
+    if (!isAuthenticated) {
       router.push("/login");
-      return;
-    }
-    
-    // Role guard
-    if (user && user.role !== "recruiter") {
+    } else if (user && user.role !== "recruiter") {
       router.push("/dashboard");
+    } else {
+      setIsReady(true);
     }
-  }, [router, user]);
+  }, [hasHydrated, isAuthenticated, router, user]);
 
   const handleLogout = () => {
     logout();
     router.push("/login");
   };
+
+  if (!isReady) {
+    return <div className="h-screen w-full flex items-center justify-center text-[13px] text-muted-foreground bg-[var(--background)]">Loading dashboard...</div>;
+  }
 
   return (
     <div className="flex h-screen bg-background">

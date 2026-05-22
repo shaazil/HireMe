@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -30,30 +30,29 @@ export default function CandidateLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, isAuthenticated, logout, hydrate } = useAuthStore();
+  const { user, isAuthenticated, logout, hasHydrated } = useAuthStore();
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    hydrate();
-  }, [hydrate]);
+    if (!hasHydrated) return;
 
-  useEffect(() => {
-    // Redirect to login if not authenticated (after hydration attempt)
-    const token = localStorage.getItem("hireme_token");
-    if (!token) {
+    if (!isAuthenticated) {
       router.push("/login");
-      return;
-    }
-
-    // Role guard
-    if (user && user.role !== "candidate") {
+    } else if (user && user.role !== "candidate") {
       router.push("/recruiter");
+    } else {
+      setIsReady(true);
     }
-  }, [router, user]);
+  }, [hasHydrated, isAuthenticated, router, user]);
 
   const handleLogout = () => {
     logout();
     router.push("/login");
   };
+
+  if (!isReady) {
+    return <div className="h-screen w-full flex items-center justify-center text-[13px] text-muted-foreground bg-[var(--background)]">Loading dashboard...</div>;
+  }
 
   return (
     <div className="flex h-screen bg-[var(--background)]">
